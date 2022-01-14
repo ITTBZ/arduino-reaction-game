@@ -37,7 +37,7 @@ void setLightColor(int r, int g, int b) {
   pixels->show();
 }
 
-int game_state = 0;
+int game_state = -1;
 unsigned int reaction_accepted_since = 0; // This value inicates since when the leds are glowing green and the program accepts an input
 
 void loop() {
@@ -98,6 +98,7 @@ void buttonPressedAction() {
     case -1:
       // User is not logged in... Handle the login on button click for now
       // TODO: Handle login -> This should happen over the fingerprint reader instead of the button press.
+      game_state = 0;
       break;
   }
 }
