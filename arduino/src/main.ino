@@ -50,7 +50,7 @@ unsigned int reaction_accepted_since = 0; // This value inicates since when the 
 void loop() {
   switch(game_state) {
     case loggedOut:
-      setLightColor(150, 150, 25);
+      setLightColor(229, 164, 25);
       break;
     case idle:
       setLightColor(0, 0, 150);
