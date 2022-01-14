@@ -37,27 +37,36 @@ void setLightColor(int r, int g, int b) {
   pixels->show();
 }
 
-int game_state = -1;
+enum GameState {
+  loggedOut,
+  idle,
+  btnNotReady,
+  btnReady
+};
+GameState game_state = loggedOut;
+
 unsigned int reaction_accepted_since = 0; // This value inicates since when the leds are glowing green and the program accepts an input
 
 void loop() {
   switch(game_state) {
-    case 0:
-      setLightColor(0, 0, 150);
-      break;
-    case 1:
-      setLightColor(150, 0, 0);
-      delay(random(5000, 12000));
-      game_state = 2;
-      reaction_accepted_since = millis();
-      break;
-    case 2:
-      setLightColor(0, 150, 0);
-      break;
-    default:
+    case loggedOut:
       setLightColor(150, 150, 25);
       break;
+    case idle:
+      setLightColor(0, 0, 150);
+      break;
+    case btnNotReady:
+      setLightColor(150, 0, 0);
+      delay(random(5000, 12000));
+      game_state = btnReady;
+      reaction_accepted_since = millis();
+      break;
+    case btnReady:
+      setLightColor(0, 150, 0);
+      break;
   }
+
+  // TODO: Show account id on display, if logged in
 }
 
 static unsigned long last_interrupt_time = 0;
@@ -81,24 +90,25 @@ void buttonPressedAction() {
 
   // Now we can continue with the normal code execution
   switch(game_state) {
-    case 0:
-      game_state = 1;
-      break;
-    
-    case 1:
-      // User pressed too early - This doesn't work that way, since the main thread is blocked by the "delay(random....)"
-      game_state = 0;
-      break;
-    
-    case 2:
-      game_state = 0;
-      int reaction_time = current_time - reaction_accepted_since;
-      Serial.println(reaction_time);
-      break;
-    case -1:
+    case loggedOut:
       // User is not logged in... Handle the login on button click for now
       // TODO: Handle login -> This should happen over the fingerprint reader instead of the button press.
-      game_state = 0;
+      game_state = idle;
+      break;
+
+    case idle:
+      game_state = btnNotReady;
+      break;
+    
+    case btnNotReady:
+      // User pressed too early - This doesn't work that way, since the main thread is blocked by the "delay(random....)"
+      game_state = idle;
+      break;
+    
+    case btnReady:
+      game_state = idle;
+      int reaction_time = current_time - reaction_accepted_since;
+      Serial.println(reaction_time);
       break;
   }
 }
