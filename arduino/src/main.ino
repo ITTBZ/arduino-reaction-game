@@ -1,73 +1,103 @@
-// NeoPixel Ring simple sketch (c) 2013 Shae Erisson
-// Released under the GPLv3 license to match the rest of the
-// Adafruit NeoPixel library
-// This sketch shows use of the "new" operator with Adafruit_NeoPixel.
-// It's helpful if you don't know NeoPixel settings at compile time or
-// just want to store this settings in EEPROM or a file on an SD card.
+// -----[ DEFINE PINS ]-----
+int LED_PIN = 6;
+int BUTTON_PIN = 3;
 
+//-----[ DEFINE HARDWARE SPECIFIC ]-----//
+int BUTTON_INTERRUPT_DELAY = 20;
+int PIXEL_COUNT = 60;
+
+//-----[ SETUP NEOPIXEL ]-----//
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
- #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
+  #include <avr/power.h>
 #endif
 
-// Which pin on the Arduino is connected to the NeoPixels?
-int pin         =  6; // On Trinket or Gemma, suggest changing this to 1
-
-// How many NeoPixels are attached to the Arduino?
-int numPixels   = 60; // Popular NeoPixel ring size
-
-// NeoPixel color format & data rate. See the strandtest example for
-// information on possible values.
-int pixelFormat = NEO_GRB + NEO_KHZ800;
-
-// Rather than declaring the whole NeoPixel object here, we just create
-// a pointer for one, which we'll then allocate later...
+int PIXEL_FORMAT = NEO_GRB + NEO_KHZ800;
 Adafruit_NeoPixel *pixels;
 
-#define DELAYVAL 20 // Time (in milliseconds) to pause between pixels
+//===========[ run the main code ]===========//
 
 void setup() {
-  // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
-  // Any other board, you can remove this part (but no harm leaving it):
-#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
-  clock_prescale_set(clock_div_1);
-#endif
-  // END of Trinket-specific code.
+  Serial.begin(9600);
   
-  // Right about here is where we could read 'pin', 'numPixels' and/or
-  // 'pixelFormat' from EEPROM or a file on SD or whatever. This is a simple
-  // example and doesn't do that -- those variables are just set to fixed
-  // values at the top of this code -- but this is where it would happen.
+  pixels = new Adafruit_NeoPixel(PIXEL_COUNT, LED_PIN, PIXEL_FORMAT);
+  pixels->begin();
 
-  // Then create a new NeoPixel object dynamically with these values:
-  pixels = new Adafruit_NeoPixel(numPixels, pin, pixelFormat);
-
-  // Going forward from here, code works almost identically to any other
-  // NeoPixel example, but instead of the dot operator on function calls
-  // (e.g. pixels.begin()), we instead use pointer indirection (->) like so:
-  pixels->begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  // You'll see more of this in the loop() function below.
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), buttonPressedAction, CHANGE);
 }
 
-void f1(int r, int g, int b) {
-  pixels->clear(); // Set all pixel colors to 'off'
-
-  // The first NeoPixel in a strand is #0, second is 1, all the way up
-  // to the count of pixels minus one.
-  for(int i=0; i<numPixels; i++) {
+void setLightColor(int r, int g, int b) {
+  pixels->clear();
+  
+  for(int i = 0 ; i < PIXEL_COUNT; i++) {
     pixels->setPixelColor(i, pixels->Color(r, g, b));
   }
 
   pixels->show();
 }
 
+int game_state = 0;
+unsigned int reaction_accepted_since = 0; // This value inicates since when the leds are glowing green and the program accepts an input
+
 void loop() {
-  f1(150, 0, 0);
-  delay(random(5000, 15000));
+  switch(game_state) {
+    case 0:
+      setLightColor(0, 0, 150);
+      break;
+    case 1:
+      setLightColor(150, 0, 0);
+      delay(random(5000, 12000));
+      game_state = 2;
+      reaction_accepted_since = millis();
+      break;
+    case 2:
+      setLightColor(0, 150, 0);
+      break;
+    default:
+      setLightColor(150, 150, 25);
+      break;
+  }
+}
 
-  f1(0, 150, 0);
-  delay(120);
+static unsigned long last_interrupt_time = 0;
+bool is_button_pressed = false;
+void buttonPressedAction() {
 
-  f1(0, 0, 150);
-  delay(1000);
+  // We have to debounce the signals, to ensure that we only accept 1 signal per button press.
+  unsigned long current_time = millis();
+  if (current_time - last_interrupt_time < BUTTON_INTERRUPT_DELAY) {
+    return;
+  }
+
+  last_interrupt_time = current_time;
+
+  if(is_button_pressed) {
+    is_button_pressed = false;
+    return;
+  }
+  
+  is_button_pressed = true;
+
+  // Now we can continue with the normal code execution
+  switch(game_state) {
+    case 0:
+      game_state = 1;
+      break;
+    
+    case 1:
+      // User pressed too early - This doesn't work that way, since the main thread is blocked by the "delay(random....)"
+      game_state = 0;
+      break;
+    
+    case 2:
+      game_state = 0;
+      int reaction_time = current_time - reaction_accepted_since;
+      Serial.println(reaction_time);
+      break;
+    case -1:
+      // User is not logged in... Handle the login on button click for now
+      // TODO: Handle login -> This should happen over the fingerprint reader instead of the button press.
+      break;
+  }
 }
