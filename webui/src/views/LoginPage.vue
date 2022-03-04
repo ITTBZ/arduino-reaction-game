@@ -1,12 +1,13 @@
 <template>
   <div>
     <h2>Login</h2>
-    <p v-if="$route.query.redirect">
-      You need to login first.
-    </p>
+    <p v-if="$route.query.redirect">You need to login first.</p>
     <form @submit.prevent="login">
-      <label><input v-model="email" placeholder="email"></label>
-      <label><input v-model="pass" placeholder="password" type="password"></label> (hint: password1)<br>
+      <label><input v-model="username" placeholder="username" /></label>
+      <label
+        ><input v-model="pass" placeholder="password" type="password"
+      /></label>
+      (hint: password1)<br />
       <button type="submit">login</button>
       <p v-if="error" class="error">Bad login information</p>
     </form>
@@ -14,32 +15,45 @@
 </template>
 
 <script>
-import auth from '../security/auth.js'
+import axios from "../security/axios.js";
 export default {
-  name: 'LoginPage',
-  data () {
+  name: "LoginPage",
+  data() {
     return {
-      email: 'joe@example.com',
-      pass: '',
-      error: false
-    }
+      user: {
+        username: "",
+        pass: "",
+      },
+    };
   },
+
   methods: {
-    login () {
-      auth.login(this.email, this.pass, loggedIn => {
-        if (!loggedIn) {
-          this.error = true
-        } else {
-          this.$router.replace(this.$route.query.redirect || '/leaderboard')
-        }
-      })
-    }
-  }
-}
+    login() {
+      axios
+        .post("/users/@me", this.user)
+        .then((resp) => {
+          const token = resp.data.token;
+          localStorage.setItem("access_token", token); // store the token in localstorage
+        })
+        .catch((e) => {
+          localStorage.removeItem("access_token"); // if the request fails, remove any possible user token if possible
+          this.errors.push(e);
+        });
+    },
+  },
+};
 </script>
 
 <style>
 .error {
   color: red;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+button {
+  width: 5rem;
 }
 </style>

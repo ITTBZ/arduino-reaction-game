@@ -17,6 +17,13 @@
             </tr>
           </tbody>
         </table>
+        <div class="createGame">
+          <form>
+            <label><input v-model="score" placeholder="score" /></label>
+            <button type="submit">create game</button>
+            <p v-if="error" class="error">Bad login information</p>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -28,14 +35,27 @@ export default {
   name: "LeaderboardPage",
   data() {
     return {
-      users: []
+      users: [],
+      newGame: {
+        score: 0
+      }
     };
   },
 
-  mounted() {
-    axios.get("/leaderboard").then((res) => this.users = res);
-  },
+  methods: {
+    mounted() {
+      axios.get("/leaderboard").then((res) => (this.users = res.data));
+    },
 
+/*     createGame() {
+      axios.post("/games", {this.newGame}).then(res) => {
+        const user = this.users.includes(res.data.userRef)
+        this.users
+      }
+    } */
+  }
+
+  
 };
 </script>
 <style>

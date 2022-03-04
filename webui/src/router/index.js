@@ -1,9 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginPage from '../views/LoginPage.vue'
+import RegisterPage from '../views/RegisterPage.vue'
 import LeaderboardPage from '../views/LeaderboardPage.vue'
-import auth from '../security/auth.js'
 
 const routes = [
+  {
+    path: '/register',
+    name: 'register',
+    component: RegisterPage
+  },
   {
     path: '/',
     name: 'login',
@@ -23,7 +28,7 @@ const router = createRouter({
 })
 
 function requireAuth (to, from, next) {
-  if (!auth.loggedIn()) {
+  if (!localStorage.getItem('access_token')) {
     next({
       path: '/',
       query: { redirect: to.fullPath }
