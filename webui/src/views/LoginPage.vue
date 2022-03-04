@@ -1,53 +1,45 @@
 <template>
-    <div id="login">
-        <h1>Login</h1>
-        <div class="form-inputs">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" v-model="input.username" placeholder="Username" />
-        </div>
-        <div class="form-inputs">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" v-model="input.password" placeholder="Password" />
-        </div>
-        <button type="button" v-on:click="login()">Login</button>
-    </div>
+  <div>
+    <h2>Login</h2>
+    <p v-if="$route.query.redirect">
+      You need to login first.
+    </p>
+    <form @submit.prevent="login">
+      <label><input v-model="email" placeholder="email"></label>
+      <label><input v-model="pass" placeholder="password" type="password"></label> (hint: password1)<br>
+      <button type="submit">login</button>
+      <p v-if="error" class="error">Bad login information</p>
+    </form>
+  </div>
 </template>
 
 <script>
-    export default {
-        name: 'LoginPage',
-        data() {
-            return {
-                input: {
-                    username: "",
-                    password: ""
-                }
-            }
-        },
-        methods: {
-            login() {
-                if(this.input.username != "" && this.input.password != "") {
-                    // This should actually be an api call not a check against this.$parent.mockAccount
-                    if(this.input.username == this.$parent.mockAccount.username && this.input.password == this.$parent.mockAccount.password) {
-                        this.$emit("authenticated", true);
-                        this.$router.replace({ name: "Leaderboard" });
-                        console.log("success");
-                    } else {
-                        console.log("The username and / or password is incorrect");
-                    }
-                } else {
-                    console.log("A username and password must be present");
-                }
-            }
-        }
+import auth from '../security/auth.js'
+export default {
+  name: 'LoginPage',
+  data () {
+    return {
+      email: 'joe@example.com',
+      pass: '',
+      error: false
     }
+  },
+  methods: {
+    login () {
+      auth.login(this.email, this.pass, loggedIn => {
+        if (!loggedIn) {
+          this.error = true
+        } else {
+          this.$router.replace(this.$route.query.redirect || '/leaderboard')
+        }
+      })
+    }
+  }
+}
 </script>
 
 <style>
-#login .form-inputs {
-    padding-bottom: 10px;
-}
-#login .form-inputs label {
-    padding-right: 10px;
+.error {
+  color: red;
 }
 </style>
