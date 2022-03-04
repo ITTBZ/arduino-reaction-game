@@ -36,26 +36,33 @@ export default {
   data() {
     return {
       users: [],
-      newGame: {
-        score: 0
-      }
+      score: 0
     };
   },
 
   methods: {
-    mounted() {
+    getLeaderboard() {
       axios.get("/leaderboard").then((res) => (this.users = res.data));
     },
 
-/*     createGame() {
-      axios.post("/games", {this.newGame}).then(res) => {
-        const user = this.users.includes(res.data.userRef)
-        this.users
-      }
-    } */
+    createGame() {
+    axios.post("/games", 
+    {score:this.score}, 
+    {headers: {"authorization": "Bearer " + localStorage.getItem('access_token')}})
+    .then(res => {
+        if(res.status == 201) {
+          this.getLeaderboard();
+        }
+    }
+
+    )},
+    mounted() {
+      this.getLeaderboard();
+    },
+
   }
 
-  
+
 };
 </script>
 <style>
