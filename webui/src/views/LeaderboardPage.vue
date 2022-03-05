@@ -11,14 +11,14 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="user in users" :key="user.score">
-              <td>user.username</td>
-              <td>user.score</td>
+            <tr v-for="user in users" :key="user.id">
+              <td>{{ user.username }}</td>
+              <td>{{ user.score }}</td>
             </tr>
           </tbody>
         </table>
         <div class="createGame">
-          <form>
+          <form @submit.prevent="createGame">
             <label><input v-model="score" placeholder="score" /></label>
             <button type="submit">create game</button>
             <p v-if="error" class="error">Bad login information</p>
@@ -30,39 +30,42 @@
 </template>
 <script>
 //import store from "../store/index.js";
-import axios from "../security/axios";
+import api from '../security/axios';
 export default {
-  name: "LeaderboardPage",
+  name: 'LeaderboardPage',
   data() {
     return {
       users: [],
-      score: 0
+      score: 0,
     };
   },
 
   methods: {
     getLeaderboard() {
-      axios.get("/leaderboard").then((res) => (this.users = res.data));
+      api.get('/leaderboard').then((res) => (this.users = res.data));
     },
 
     createGame() {
-    axios.post("/games", 
-    {score:this.score}, 
-    {headers: {"authorization": "Bearer " + localStorage.getItem('access_token')}})
-    .then(res => {
-        if(res.status == 201) {
-          this.getLeaderboard();
-        }
-    }
-
-    )},
-    mounted() {
-      this.getLeaderboard();
+      api
+        .post(
+          '/games',
+          { score: this.score },
+          {
+            headers: {
+              authorization: 'Bearer ' + localStorage.getItem('access_token'),
+            },
+          }
+        )
+        .then((res) => {
+          if (res.status == 201) {
+            this.getLeaderboard();
+          }
+        });
     },
-
-  }
-
-
+  },
+  mounted() {
+    this.getLeaderboard();
+  },
 };
 </script>
 <style>

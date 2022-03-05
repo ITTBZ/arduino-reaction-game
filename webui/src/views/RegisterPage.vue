@@ -2,10 +2,10 @@
   <div>
     <h2>Register</h2>
     <form @submit.prevent="register">
-      <label><input v-model="username" placeholder="username" /></label>
-      {{firstName}}
+      <label><input v-model="user.username" placeholder="username" /></label>
+      {{ firstName }}
       <label
-        ><input v-model="pass" placeholder="password" type="password"
+        ><input v-model="user.password" placeholder="password" type="password"
       /></label>
       <button type="submit">Register</button>
       <p v-if="error" class="error">Bad Register information</p>
@@ -14,25 +14,25 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios from '../security/axios';
 export default {
-  name: "RegisterPage",
+  name: 'RegisterPage',
   data() {
     return {
       user: {
-        username: "",
-        pass: ""
-      }
+        username: '',
+        password: '',
+      },
+      errors: [],
     };
   },
   methods: {
     register() {
-
       axios
-        .post("/users", this.user)
+        .post('/users', this.user)
         .then((response) => {
-          if(response.status == 201) {
-            this.$router.push('/')
+          if (response.status == 201) {
+            this.$router.push('/');
           }
         })
         .catch((e) => {
@@ -53,6 +53,6 @@ form {
   align-items: center;
 }
 button {
-  width:5rem;
+  width: 5rem;
 }
 </style>
