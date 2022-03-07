@@ -1,27 +1,22 @@
 <template>
   <div>
-    <h2>Register</h2>
-    <form @submit.prevent="register">
-      <label><input v-model="user.username" placeholder="username" /></label>
-      {{ firstName }}
-      <label
-        ><input v-model="user.password" placeholder="password" type="password"
-      /></label>
-      <button type="submit">Register</button>
-      <p v-if="error" class="error">Bad Register information</p>
-    </form>
+    <h2>Welcome, {{ username }}!</h2>
+    <div>
+      Link user code 
+    </div>
   </div>
 </template>
 
 <script>
-import axios from '../security/axios';
+import api from '../services/api';
+
 export default {
-  name: 'RegisterPage',
+  name: 'UserView',
   data() {
     return {
       user: {
         username: '',
-        password: '',
+        tempCode: ''
       },
       errors: [],
     };
