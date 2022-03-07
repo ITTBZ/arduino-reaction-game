@@ -26,7 +26,7 @@ HttpClient client = HttpClient(wifi, "195.201.132.250", 3000);
 int wifiStatus = WL_IDLE_STATUS;
 
 String apiToken = "";
-String tempCode = "AEIOU1";
+String tempCode = "";
 
 enum GameState {
   UNAUTHORIZED = 0,
@@ -35,7 +35,7 @@ enum GameState {
   IN_GAME_GO = 3
 };
 
-GameState gameState;
+GameState gameState = UNAUTHORIZED;
 unsigned int goStartedAt = 0; // This value indicates the timestamp since when the gameState is IN_GAME_GO
 
 static unsigned long buttonLastInterruptedAt = 0;
@@ -57,23 +57,13 @@ void setup() {
 
   //Serial.println("Connected to: " + WiFi.SSID() + " as " + WiFi.localIP());
   Serial.println("Connected!");
-  gameState = GameState.UNAUTHORIZED;
-
-  // TODO Generate tempCode
-}
-
-void setLightColor(int r, int g, int b) {
-  pixels->clear();
-  for(int i = 0 ; i < PIXEL_COUNT; i++) {
-    pixels->setPixelColor(i, pixels->Color(r, g, b));
-  }
-  pixels->show();
+  tempCode = generateTempCode(6);
 }
 
 void loop() {
   switch(gameState) {
 
-    case GameState.UNAUTHORIZED:
+    case UNAUTHORIZED: {
       // The user isn't logged in yet. Show yellow light
       setLightColor(150, 150, 25);
 
@@ -85,31 +75,50 @@ void loop() {
       String response = client.responseBody();
 
       if(statusCode == 200) {
-        Serial.println(response);
         apiToken = response;
-        gameState = GameState.IN_MENU;
+        gameState = IN_MENU;
       }
       break;
+    }
       
-    case GameState.IN_MENU:
+    case IN_MENU: {
       setLightColor(0, 0, 150);
       break;
+    }
       
-    case GameState.IN_GAME_WAITING:
+    case IN_GAME_WAITING: {
       setLightColor(150, 0, 0);
 
       delay(random(5000, 12000));
       
       goStartedAt = millis();
-      gameState = GameState.IN_GAME_GO;
+      gameState = IN_GAME_GO;
       break;
+    }
       
-    case GameState.IN_GAME_GO:
+    case IN_GAME_GO: {
       setLightColor(0, 150, 0);
       break;
+    }
   }
 }
 
+String generateTempCode(int stringLength) {
+  String letters[]= {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+  String randString = "";
+  for(int i = 0; i < stringLength; i++) {
+    randString = randString + letters[random(0, 36)];
+  }
+  return randString;
+}
+
+void setLightColor(int r, int g, int b) {
+  pixels->clear();
+  for(int i = 0 ; i < PIXEL_COUNT; i++) {
+    pixels->setPixelColor(i, pixels->Color(r, g, b));
+  }
+  pixels->show();
+}
 
 void buttonPressedAction() {
 
@@ -128,21 +137,23 @@ void buttonPressedAction() {
   buttonIsBeingPressed = true;
 
   switch(gameState) {
-    case GameState.IN_MENU:
+    case IN_MENU: {
+      Serial.println("btn: in menu");
       // User is in menu and starts game by pressing the button.
-      gameState = GameState.IN_GAME_WAITING;
+      gameState = IN_GAME_WAITING;
       break;
+    }
     
-    case GameState.IN_GAME_WAITING:
+    /*case IN_GAME_WAITING: {
       // User ingame and pressed too early - This doesn't work that way, since the main thread is blocked by the "delay(random....) above"
-      gameState = GameState.IN_MENU;
+      gameState = IN_MENU;
       break;
+    }*/
     
-    case GameState.IN_GAME_GO:
-      gameState = GameState.IN_MENU;
+    case IN_GAME_GO: {
+      gameState = IN_MENU;
 
       int reactionTime = currentTime - goStartedAt;
-      Serial.println(reactionTime);
 
       String postData = "{\"score\": " + String(reactionTime) + "}";
       client.beginRequest();
@@ -154,8 +165,10 @@ void buttonPressedAction() {
       client.print(postData);
       client.endRequest();
       break;
+    }
       
-    default:
+    default: {
       break;
+    }
   }
 }
