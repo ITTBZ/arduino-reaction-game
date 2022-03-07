@@ -55,8 +55,10 @@ void setup() {
     wifiStatus = WiFi.begin(ssid, pass);
   }
 
-  //Serial.println("Connected to: " + WiFi.SSID() + " as " + WiFi.localIP());
-  Serial.println("Connected!");
+  Serial.print("Connected to " + String(WiFi.SSID()) + " as ");
+  Serial.println(WiFi.localIP());
+
+  randomSeed(analogRead(0)); // random values fix
   tempCode = generateTempCode(6);
 }
 
@@ -103,11 +105,17 @@ void loop() {
   }
 }
 
+unsigned long betterrandom(unsigned long minVal, unsigned long maxVal) {
+  return minVal + random() % (maxVal - minVal);
+}
+
 String generateTempCode(int stringLength) {
   String letters[]= {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
   String randString = "";
   for(int i = 0; i < stringLength; i++) {
-    randString = randString + letters[random(0, 36)];
+    int randVal = betterrandom(0, 36);
+    Serial.println(randVal);
+    randString = randString + letters[randVal];
   }
   return randString;
 }
