@@ -25,7 +25,7 @@ import api from '../services/api';
 export default {
   name: 'UserView',
   data: () => ({
-    username: 'Dillan',
+    username: 'Mr. Hardcoded',
     tempCode: '',
     error: ''
   }),
@@ -48,7 +48,7 @@ export default {
         )
         .then(() => {
           this.error = '';
-          this.code = '';
+          this.tempCode = '';
         })
         .catch(() => {
           this.error = 'An error occured';
