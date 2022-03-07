@@ -25,6 +25,9 @@ WiFiClient wifi;
 HttpClient client = HttpClient(wifi, "195.201.132.250", 3000);
 int wifiStatus = WL_IDLE_STATUS;
 
+String apiToken = "";
+String tempCode = "AEIOU1";
+
 enum GameState {
   UNAUTHORIZED = 0,
   IN_MENU = 1,
@@ -32,9 +35,11 @@ enum GameState {
   IN_GAME_GO = 3
 };
 
-String apiToken = "";
-String tempCode = "AEIOU1";
 GameState gameState;
+unsigned int goStartedAt = 0; // This value indicates the timestamp since when the gameState is IN_GAME_GO
+
+static unsigned long buttonLastInterruptedAt = 0;
+bool buttonIsBeingPressed = false;
 
 void setup() {
   Serial.begin(9600);
@@ -65,14 +70,13 @@ void setLightColor(int r, int g, int b) {
   pixels->show();
 }
 
-unsigned int goStartedAt = 0; // This value inicates since when the leds are glowing green and the program accepts an input
-
 void loop() {
   switch(gameState) {
 
     case GameState.UNAUTHORIZED:
       // The user isn't logged in yet. Show yellow light
       setLightColor(150, 150, 25);
+
       delay(1000);
 
       // Check if there is an identity linked to the temp code.
@@ -93,9 +97,11 @@ void loop() {
       
     case GameState.IN_GAME_WAITING:
       setLightColor(150, 0, 0);
+
       delay(random(5000, 12000));
-      game_state = btnReady;
+      
       goStartedAt = millis();
+      gameState = GameState.IN_GAME_GO;
       break;
       
     case GameState.IN_GAME_GO:
@@ -104,23 +110,22 @@ void loop() {
   }
 }
 
-static unsigned long lastInterruptedAt = 0;
-bool is_button_pressed = false;
+
 void buttonPressedAction() {
 
   // We have to debounce the signals, to ensure that we only accept 1 signal per button press.
   unsigned long currentTime = millis();
-  if (currentTime - lastInterruptedAt < BUTTON_INTERRUPT_DELAY) {
+  if (currentTime - buttonLastInterruptedAt < BUTTON_INTERRUPT_DELAY) {
     return;
   }
 
-  lastInterruptedAt = currentTime;
-  if(is_button_pressed) {
-    is_button_pressed = false;
+  buttonLastInterruptedAt = currentTime;
+  if(buttonIsBeingPressed) {
+    buttonIsBeingPressed = false;
     return;
   }
   
-  is_button_pressed = true;
+  buttonIsBeingPressed = true;
 
   switch(gameState) {
     case GameState.IN_MENU:
