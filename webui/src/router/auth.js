@@ -1,10 +1,14 @@
-export default (to, from, next) => {
-  if (!localStorage.getItem('access_token')) {
+import { getToken } from '@/services/jwt';
+
+const requireAuth = (to, from, next) => {
+  if (getToken() === null) {
     next({
-      path: '/',
-      query: { redirect: to.fullPath },
+      path: '/auth',
+      query: { redirect: encodeURIComponent(to.fullPath) }
     });
   } else {
     next();
   }
 };
+
+export { requireAuth };

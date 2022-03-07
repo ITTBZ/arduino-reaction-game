@@ -62,7 +62,8 @@ export default {
         .then((res) => {
           if (this.isLoginTabActive) {
             setToken(res.data.token);
-            this.$router.push('/profile');
+            const origin = decodeURIComponent(this.$route.query.redirect) || '/profile';
+            this.$router.push(origin);
           } else {
             this.switchForm(0);
           }
@@ -76,7 +77,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 @import url(https://fonts.googleapis.com/css?family=Raleway:400,100,200,300);
 * {
   margin: 0;
