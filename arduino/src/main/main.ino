@@ -7,6 +7,11 @@
   #include <avr/power.h>
 #endif
 
+#include <Wire.h>
+#include "rgb_lcd.h";
+
+rgb_lcd lcd;
+
 int LED_PIN = 6;
 int BUTTON_PIN = 3;
 int BUTTON_INTERRUPT_DELAY = 20;
@@ -43,6 +48,10 @@ bool buttonIsBeingPressed = false;
 
 void setup() {
   Serial.begin(9600);
+
+  lcd.begin(16, 1);
+  lcd.setRGB(255, 255, 255);
+  lcd.print("Connecting...");
   
   pixels = new Adafruit_NeoPixel(PIXEL_COUNT, LED_PIN, PIXEL_FORMAT);
   pixels->begin();
@@ -60,6 +69,8 @@ void setup() {
 
   randomSeed(analogRead(0)); // random values fix
   tempCode = generateTempCode(6);
+  lcd.clear();
+  lcd.print("Code: "+ tempCode);
 }
 
 void loop() {
@@ -79,6 +90,8 @@ void loop() {
       if(statusCode == 200) {
         apiToken = response;
         gameState = IN_MENU;
+        lcd.clear();
+        lcd.print("Logged in!");
       }
       break;
     }
@@ -114,7 +127,6 @@ String generateTempCode(int stringLength) {
   String randString = "";
   for(int i = 0; i < stringLength; i++) {
     int randVal = betterrandom(0, 36);
-    Serial.println(randVal);
     randString = randString + letters[randVal];
   }
   return randString;
@@ -146,7 +158,6 @@ void buttonPressedAction() {
 
   switch(gameState) {
     case IN_MENU: {
-      Serial.println("btn: in menu");
       // User is in menu and starts game by pressing the button.
       gameState = IN_GAME_WAITING;
       break;
@@ -172,6 +183,8 @@ void buttonPressedAction() {
       client.beginBody();
       client.print(postData);
       client.endRequest();
+
+      //lcd.print("Score: " + String(reactionTime));
       break;
     }
       
